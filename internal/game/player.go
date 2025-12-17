@@ -20,9 +20,10 @@ type Player struct {
 const (
 	MaxAttackRoll = 20
 	MaxDamageRoll = 10
+	MaxHealRoll   = 6
 	MaxAttack     = 1.5
 	MaxArmor      = 16
-	StartHealth   = 100
+	StartHealth   = 30
 	StartAttack   = 1.0
 	StartArmor    = 10
 )
@@ -73,4 +74,10 @@ func (p *Player) charge() {
 func (p *Player) dodge() {
 	p.Dodging = true
 	fmt.Printf(messages.Dodge, p.Name)
+}
+
+func (p *Player) heal() {
+	healRoll := rand.Intn(MaxHealRoll-1) + 1
+	p.Health += healRoll
+	fmt.Printf(messages.Heal, p.Name, healRoll)
 }

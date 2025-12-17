@@ -10,6 +10,7 @@ const (
 	Defense       = "%s increases their defenses.\n"
 	Charge        = "%s powers up.\n"
 	Dodge         = "%s attempts to dodge.\n"
+	Heal          = "%s heals for %d health.\n"
 	Victory       = "%s is dead. %s wins!\n"
 	Tie           = "It's a tie!\n"
 )
