@@ -39,6 +39,7 @@ func (p *Player) attack(defender *Player) {
 	if defender.Dodging {
 		secondAttackRoll := rand.Intn(MaxAttackRoll-1) + 1
 		attackRoll = min(attackRoll, secondAttackRoll)
+		defender.Dodging = false
 	}
 	if attackRoll <= defender.Armor {
 		fmt.Printf(messages.AttackMiss, p.Name)
