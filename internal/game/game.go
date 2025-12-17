@@ -41,6 +41,8 @@ func playTurn(p1, p2 *Player) {
 		p1.charge()
 	case Dodge:
 		p1.dodge()
+	case Heal:
+		p1.heal()
 	default:
 		log.Fatal("Error")
 	}
@@ -53,6 +55,8 @@ func playTurn(p1, p2 *Player) {
 		p2.charge()
 	case Dodge:
 		p2.dodge()
+	case Heal:
+		p2.heal()
 	default:
 		log.Fatal("Error")
 	}

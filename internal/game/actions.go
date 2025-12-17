@@ -5,4 +5,5 @@ const (
 	Defend = "defend"
 	Charge = "charge"
 	Dodge  = "dodge"
+	Heal   = "heal"
 )
