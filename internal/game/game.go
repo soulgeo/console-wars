@@ -7,12 +7,13 @@ import (
 	"github.com/soulgeo/console-wars/internal/messages"
 )
 
-func playGame(p1, p2 *Player) {
+func playGame(p1, p2 *Player, c chan string) {
+	defer close(c)
 	p1.initialize()
 	p2.initialize()
 	for p1.Health > 0 && p2.Health > 0 {
-		playTurn(p1, p2)
-		fmt.Printf(
+		playTurn(p1, p2, c)
+		c <- fmt.Sprintf(
 			messages.CurrentHealth,
 			p1.Name,
 			p1.Health,
@@ -21,43 +22,41 @@ func playGame(p1, p2 *Player) {
 		)
 	}
 	if p1.Health > 0 {
-		fmt.Printf(messages.Victory, p2.Name, p1.Name)
+		c <- fmt.Sprintf(messages.Victory, p2.Name, p1.Name)
 		return
 	}
 	if p2.Health > 0 {
-		fmt.Printf(messages.Victory, p1.Name, p2.Name)
+		c <- fmt.Sprintf(messages.Victory, p1.Name, p2.Name)
 		return
 	}
-	fmt.Printf(messages.Tie)
+	c <- fmt.Sprintf(messages.Tie)
 }
 
-func playTurn(p1, p2 *Player) {
-	switch p1.Action {
-	case Attack:
-		p1.attack(p2)
-	case Defend:
-		p1.defend()
-	case Charge:
-		p1.charge()
-	case Dodge:
-		p1.dodge()
-	case Heal:
-		p1.heal()
-	default:
-		log.Fatal("Error")
+func playTurn(p1, p2 *Player, c chan string) {
+	processPreparation(p1, c)
+	processPreparation(p2, c)
+
+	if p1.Action == Attack {
+		p1.attack(p2, c)
 	}
-	switch p2.Action {
-	case Attack:
-		p2.attack(p1)
+	if p2.Action == Attack {
+		p2.attack(p1, c)
+	}
+}
+
+func processPreparation(p *Player, c chan string) {
+	switch p.Action {
 	case Defend:
-		p2.defend()
+		p.defend(c)
 	case Charge:
-		p2.charge()
+		p.charge(c)
 	case Dodge:
-		p2.dodge()
+		p.dodge(c)
 	case Heal:
-		p2.heal()
+		p.heal(c)
+	case Attack:
+		return
 	default:
-		log.Fatal("Error")
+		log.Printf("Warning: Unknown action %s for player %s", p.Action, p.Name)
 	}
 }
