@@ -3,59 +3,129 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"net"
+	"time"
 )
 
 const Port = ":4567"
 
-func handleConnections(conn1 net.Conn, conn2 net.Conn) {
-	defer conn1.Close()
-	defer conn2.Close()
-	defer fmt.Printf("Connections closed.\n")
-
-	fmt.Printf("Chat initiated.\n")
-
-	scan1 := bufio.NewScanner(conn1)
-	scan2 := bufio.NewScanner(conn2)
-	go scanAndSend(*scan1, conn2)
-	scanAndSend(*scan2, conn1)
+type Client struct {
+	Conn   net.Conn
+	Reader *bufio.Reader
 }
 
-func scanAndSend(scanner bufio.Scanner, conn net.Conn) {
+func matchConnections(c chan net.Conn) {
+	var pending *Client
+	for {
+		newConn := <-c
+		newClient := &Client{
+			Conn:   newConn,
+			Reader: bufio.NewReader(newConn),
+		}
+		fmt.Printf("New connection: %s\n", newConn.RemoteAddr())
+
+		if pending == nil {
+			pending = newClient
+			fmt.Printf("Client %s is now waiting...\n", newConn.RemoteAddr())
+			continue
+		}
+
+		// IMPORTANT:
+		// Check if pending connection is closed when the new connection arrives.
+		err := pending.Conn.SetReadDeadline(
+			time.Now().Add(10 * time.Millisecond),
+		)
+		if err != nil {
+			log.Printf("Error setting deadline: %v", err)
+		}
+		_, err = pending.Reader.Peek(1)
+		pending.Conn.SetReadDeadline(time.Time{})
+
+		if err == io.EOF {
+			fmt.Printf(
+				"Waiting client %s disconnected. Dropping.\n",
+				pending.Conn.RemoteAddr(),
+			)
+			pending.Conn.Close()
+			pending = newClient
+			fmt.Printf(
+				"Client %s promoted to waiting.\n",
+				pending.Conn.RemoteAddr(),
+			)
+			continue
+		} else if err != nil {
+			// A timeout error is good here. It means "No data, but also no EOF".
+			// Check if it's strictly a timeout.
+			if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+				// Alive and silent. Proceed to match.
+			} else {
+				// Some other error (connection reset, etc). Drop pending.
+				fmt.Printf("Waiting client error (%s). Dropping.\n", err)
+				pending.Conn.Close()
+				pending = newClient
+				continue
+			}
+		}
+
+		// Both clients connected, proceed.
+		go handleConnections(pending, newClient)
+	}
+}
+
+func handleConnections(c1, c2 *Client) {
+	defer c1.Conn.Close()
+	defer c2.Conn.Close()
+	log.Printf(
+		"Match found: %s <-> %s\n",
+		c1.Conn.RemoteAddr(),
+		c2.Conn.RemoteAddr(),
+	)
+
+	done := make(chan struct{})
+
+	go scanAndSend(c1.Reader, c2.Conn, done)
+	go scanAndSend(c2.Reader, c1.Conn, done)
+
+	<-done
+	fmt.Printf(
+		"Closing chat between %s and %s\n",
+		c1.Conn.RemoteAddr(),
+		c2.Conn.RemoteAddr(),
+	)
+}
+
+func scanAndSend(r io.Reader, w net.Conn, done chan struct{}) {
+	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		text := scanner.Text()
-		fmt.Printf("read from 1: %s\n", text)
-		writer := bufio.NewWriter(conn)
-		_, err := writer.WriteString(text + "\n")
+		_, err := fmt.Fprintf(w, "%s\n", text)
 		if err != nil {
-			log.Fatalf("error: %s\n", err.Error())
+			break
 		}
-		writer.Flush()
+	}
+	select {
+	case done <- struct{}{}:
+	default:
+		// Prevent blocking if both fail simultaneously
 	}
 }
 
 func main() {
-	addr, err := net.ResolveTCPAddr("tcp", Port)
+	listener, err := net.Listen("tcp", Port)
 	if err != nil {
-		log.Fatalf("Error resolving address: %v", err)
+		log.Fatalf("Error with listener: %s", err)
 	}
-	listener, err := net.ListenTCP("tcp", addr)
-	if err != nil {
-		log.Fatalf("Error with listener: %v", err)
-	}
+	c := make(chan net.Conn, 100)
+	go matchConnections(c)
+
 	fmt.Printf("Listening on %s\n", Port)
 	for {
-		conn1, err := listener.Accept()
+		conn, err := listener.Accept()
 		if err != nil {
-			log.Fatalf("error: %s\n", err.Error())
+			log.Fatalf("Accept error: %s\n", err)
 		}
-		fmt.Printf("Connection accepted (1/2)\n")
-		conn2, err := listener.Accept()
-		if err != nil {
-			log.Fatalf("error: %s\n", err.Error())
-		}
-		fmt.Printf("Connection accepted (2/2)\n")
-		go handleConnections(conn1, conn2)
+		c <- conn
 	}
 }
