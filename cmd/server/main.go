@@ -7,6 +7,8 @@ import (
 	"log"
 	"net"
 	"time"
+
+	"github.com/soulgeo/console-wars/internal/game"
 )
 
 const Port = ":4567"
@@ -14,6 +16,7 @@ const Port = ":4567"
 type Client struct {
 	Conn   net.Conn
 	Reader *bufio.Reader
+	Player game.Player
 }
 
 func matchConnections(c chan net.Conn) {
@@ -71,6 +74,7 @@ func matchConnections(c chan net.Conn) {
 
 		// Both clients connected, proceed.
 		go handleConnections(pending, newClient)
+		pending = nil
 	}
 }
 
