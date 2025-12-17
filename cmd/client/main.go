@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"time"
 )
 
 const Port = ":4567"
@@ -13,7 +14,6 @@ const Port = ":4567"
 func writeToServer(conn net.Conn) {
 	for {
 		reader := bufio.NewReader(os.Stdin)
-		fmt.Print("Enter text: ")
 		text, _ := reader.ReadString('\n')
 
 		writer := bufio.NewWriter(conn)
@@ -22,13 +22,14 @@ func writeToServer(conn net.Conn) {
 			log.Fatalf("error: %s\n", err.Error())
 		}
 		writer.Flush()
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
 func readFromServer(conn net.Conn) {
 	scanner := bufio.NewScanner(conn)
 	for scanner.Scan() {
-		fmt.Printf("Server wrote: %s\n", scanner.Text())
+		fmt.Printf("Other side: %s\n", scanner.Text())
 	}
 }
 
