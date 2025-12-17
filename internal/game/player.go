@@ -14,6 +14,7 @@ type Player struct {
 	Health  int
 	Attack  float32
 	Armor   int
+	Heals   int
 	Dodging bool
 }
 
@@ -26,12 +27,14 @@ const (
 	StartHealth   = 30
 	StartAttack   = 1.0
 	StartArmor    = 10
+	StartHeals    = 3
 )
 
 func (p *Player) initialize() {
 	p.Health = StartHealth
 	p.Attack = StartAttack
 	p.Armor = StartArmor
+	p.Heals = StartHeals
 }
 
 func (p *Player) attack(defender *Player) {
@@ -78,7 +81,12 @@ func (p *Player) dodge() {
 }
 
 func (p *Player) heal() {
+	if p.Heals == 0 {
+		fmt.Printf(messages.HealFail, p.Name)
+		return
+	}
 	healRoll := rand.Intn(MaxHealRoll-1) + 1
 	p.Health += healRoll
-	fmt.Printf(messages.Heal, p.Name, healRoll)
+	p.Heals -= 1
+	fmt.Printf(messages.Heal, p.Name, healRoll, p.Heals)
 }
