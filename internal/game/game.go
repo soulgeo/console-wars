@@ -1,19 +1,24 @@
 package game
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/soulgeo/console-wars/internal/messages"
 )
 
-func PlayGame(p1, p2 *Player, msg, act1, act2 chan string) {
+func Play(p1, p2 *Player, msg, act1, act2 chan string) {
 	defer close(msg)
-	defer close(act1)
-	defer close(act2)
+	// act1 and act2 are closed by the sender (server/receiveActions)
+
 	p1.initialize()
 	p2.initialize()
+
+	msg <- fmt.Sprintf(messages.Welcome)
 	msg <- fmt.Sprintf(messages.GameStart)
+
 	turn := 0
 	for p1.Health > 0 && p2.Health > 0 {
 		turn++
@@ -21,7 +26,12 @@ func PlayGame(p1, p2 *Player, msg, act1, act2 chan string) {
 		msg <- fmt.Sprintf(messages.CurrentHealth, p1.Name, p1.Health, p2.Name, p2.Health)
 		msg <- fmt.Sprintf("%s\n", AwaitingInput)
 
-		p1.Action, p2.Action = <-act1, <-act2
+		var err error
+		p1.Action, p2.Action, err = waitForActions(act1, act2)
+		if err != nil {
+			msg <- err.Error()
+			return
+		}
 
 		playTurn(p1, p2, msg)
 	}
@@ -34,6 +44,34 @@ func PlayGame(p1, p2 *Player, msg, act1, act2 chan string) {
 		return
 	}
 	msg <- fmt.Sprintf(messages.Tie)
+}
+
+func waitForActions(
+	act1, act2 chan string,
+) (string, string, error) {
+	timeout := time.After(30 * time.Second)
+	var a1, a2 string
+	ch1, ch2 := act1, act2
+
+	for ch1 != nil || ch2 != nil {
+		select {
+		case action, ok := <-ch1:
+			if !ok {
+				return "", "", fmt.Errorf(messages.PlayerDisconnected)
+			}
+			a1 = action
+			ch1 = nil
+		case action, ok := <-ch2:
+			if !ok {
+				return "", "", fmt.Errorf(messages.PlayerDisconnected)
+			}
+			a2 = action
+			ch2 = nil
+		case <-timeout:
+			return "", "", errors.New(messages.GameTimeout)
+		}
+	}
+	return a1, a2, nil
 }
 
 func playTurn(p1, p2 *Player, msg chan string) {

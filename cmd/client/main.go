@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"errors"
+	"flag"
 	"fmt"
 	"log"
 	"net"
@@ -22,7 +23,6 @@ func readFromServer(conn net.Conn, inReader *bufio.Reader) {
 			fmt.Printf("%s\n", text)
 			continue
 		}
-		fmt.Printf(messages.AwaitAction)
 		writeToServer(conn, inReader)
 	}
 }
@@ -31,6 +31,7 @@ func writeToServer(conn net.Conn, inReader *bufio.Reader) {
 	connWriter := bufio.NewWriter(conn)
 
 	for {
+		fmt.Printf(messages.AwaitAction)
 		input, err := inReader.ReadString('\n')
 		if err != nil {
 			// EOF or other error, stop trying to read
@@ -62,10 +63,27 @@ func filterInput(input string) error {
 }
 
 func main() {
-	conn, err := net.Dial("tcp", config.Port)
+	serverAddr := flag.String("server", "localhost"+config.Port, "address of the game server")
+	flag.Parse()
+
+	inReader := bufio.NewReader(os.Stdin)
+	fmt.Printf("Enter your name > ")
+	name, err := inReader.ReadString('\n')
 	if err != nil {
 		log.Fatalf("error: %s\n", err.Error())
 	}
-	inReader := bufio.NewReader(os.Stdin)
+	name = strings.TrimSpace(name) // Trim the newline character
+
+	conn, err := net.Dial("tcp", *serverAddr)
+	if err != nil {
+		log.Fatalf("error: %s\n", err.Error())
+	}
+
+	// Send the player's name to the server immediately after connecting
+	_, err = fmt.Fprintf(conn, "%s\n", name)
+	if err != nil {
+		log.Fatalf("error sending name to server: %s\n", err.Error())
+	}
+
 	readFromServer(conn, inReader)
 }
