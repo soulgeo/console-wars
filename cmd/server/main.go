@@ -86,14 +86,15 @@ func handleConnections(c1, c2 *Client) {
 		c2.Conn.RemoteAddr(),
 	)
 
-	done := make(chan struct{})
-
 	logs := make(chan string, 10)
-	played := make(chan byte)
-	c1.Player = game.Player{}
-	c2.Player = game.Player{}
+	act1 := make(chan string, 10)
+	act2 := make(chan string, 10)
+	c1.Player = game.Player{Name: "p1"}
+	c2.Player = game.Player{Name: "p2"}
 
-	go game.PlayGame(&c1.Player, &c2.Player, logs, played)
+	go game.PlayGame(&c1.Player, &c2.Player, logs, act1, act2)
+	go receiveActions(c1.Conn, act1)
+	go receiveActions(c2.Conn, act2)
 
 	writer1 := bufio.NewWriter(c1.Conn)
 	writer2 := bufio.NewWriter(c2.Conn)
@@ -110,7 +111,6 @@ func handleConnections(c1, c2 *Client) {
 		writer2.Flush()
 	}
 
-	<-done
 	fmt.Printf(
 		"Closing chat between %s and %s\n",
 		c1.Conn.RemoteAddr(),
@@ -118,19 +118,11 @@ func handleConnections(c1, c2 *Client) {
 	)
 }
 
-func scanAndSend(r io.Reader, w net.Conn, done chan struct{}) {
-	scanner := bufio.NewScanner(r)
+func receiveActions(conn net.Conn, action chan string) {
+	scanner := bufio.NewScanner(conn)
 	for scanner.Scan() {
 		text := scanner.Text()
-		_, err := fmt.Fprintf(w, "%s\n", text)
-		if err != nil {
-			break
-		}
-	}
-	select {
-	case done <- struct{}{}:
-	default:
-		// Prevent blocking if both fail simultaneously
+		action <- text
 	}
 }
 

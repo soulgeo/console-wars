@@ -5,7 +5,7 @@ const (
 	GameStart     = "Ready? FIGHT!\n"
 	NewTurn       = "--- TURN %d ---\n"
 	CurrentHealth = "Current Health:\n%s: %d\n%s: %d\n"
-	AwaitAction   = "%s, what will you do? "
+	AwaitAction   = "What will you do? "
 	AttackHit     = "%s attacks and deals %d damage to %s.\n"
 	AttackMiss    = "%s attacks but misses.\n"
 	Critical      = "Critical hit! "
