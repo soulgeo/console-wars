@@ -7,11 +7,16 @@ import (
 	"github.com/soulgeo/console-wars/internal/messages"
 )
 
-func playGame(p1, p2 *Player, c chan string) {
+func PlayGame(p1, p2 *Player, c chan string, played chan byte) {
 	defer close(c)
 	p1.initialize()
 	p2.initialize()
+	c <- fmt.Sprintf(messages.GameStart)
+	turn := 0
 	for p1.Health > 0 && p2.Health > 0 {
+		turn++
+		c <- fmt.Sprintf(messages.NewTurn, turn)
+		<-played
 		playTurn(p1, p2, c)
 		c <- fmt.Sprintf(
 			messages.CurrentHealth,

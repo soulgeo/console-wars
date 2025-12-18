@@ -29,7 +29,7 @@ func writeToServer(conn net.Conn) {
 func readFromServer(conn net.Conn) {
 	scanner := bufio.NewScanner(conn)
 	for scanner.Scan() {
-		fmt.Printf("Other side: %s\n", scanner.Text())
+		fmt.Printf("%s\n", scanner.Text())
 	}
 }
 

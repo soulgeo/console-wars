@@ -89,8 +89,27 @@ func handleConnections(c1, c2 *Client) {
 
 	done := make(chan struct{})
 
-	go scanAndSend(c1.Reader, c2.Conn, done)
-	go scanAndSend(c2.Reader, c1.Conn, done)
+	logs := make(chan string, 10)
+	played := make(chan byte)
+	c1.Player = game.Player{}
+	c2.Player = game.Player{}
+
+	go game.PlayGame(&c1.Player, &c2.Player, logs, played)
+
+	writer1 := bufio.NewWriter(c1.Conn)
+	writer2 := bufio.NewWriter(c2.Conn)
+	for l := range logs {
+		_, err := writer1.WriteString(l)
+		if err != nil {
+			log.Fatalf("error: %s\n", err.Error())
+		}
+		_, err = writer2.WriteString(l)
+		if err != nil {
+			log.Fatalf("error: %s\n", err.Error())
+		}
+		writer1.Flush()
+		writer2.Flush()
+	}
 
 	<-done
 	fmt.Printf(
