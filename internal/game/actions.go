@@ -1,7 +1,8 @@
 package game
 
 const (
-	Attack = "attack"
+	AwaitingInput = "READ"
+	Attack        = "attack"
 	Defend = "defend"
 	Charge = "charge"
 	Dodge  = "dodge"

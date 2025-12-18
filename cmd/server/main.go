@@ -8,10 +8,9 @@ import (
 	"net"
 	"time"
 
+	"github.com/soulgeo/console-wars/internal/config"
 	"github.com/soulgeo/console-wars/internal/game"
 )
-
-const Port = ":4567"
 
 type Client struct {
 	Conn   net.Conn
@@ -136,14 +135,14 @@ func scanAndSend(r io.Reader, w net.Conn, done chan struct{}) {
 }
 
 func main() {
-	listener, err := net.Listen("tcp", Port)
+	listener, err := net.Listen("tcp", config.Port)
 	if err != nil {
 		log.Fatalf("Error with listener: %s", err)
 	}
 	c := make(chan net.Conn, 100)
 	go matchConnections(c)
 
-	fmt.Printf("Listening on %s\n", Port)
+	fmt.Printf("Listening on %s\n", config.Port)
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
