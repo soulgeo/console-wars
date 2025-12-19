@@ -5,7 +5,7 @@ import (
 	"io"
 	"log"
 	"net"
-	"strings" // Add this import
+	"strings"
 	"time"
 
 	"github.com/soulgeo/console-wars/internal/config"
@@ -33,7 +33,6 @@ func matchConnections(c chan net.Conn) {
 		}
 		log.Printf("New connection: %s", newConn.RemoteAddr())
 
-		// Read the player's name
 		name, err := newClient.Reader.ReadString('\n')
 		if err != nil {
 			log.Printf("Error reading player name: %v", err)
