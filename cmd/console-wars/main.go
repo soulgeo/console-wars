@@ -34,7 +34,6 @@ func writeToServer(conn net.Conn, inReader *bufio.Reader) {
 		fmt.Printf(messages.AwaitAction)
 		input, err := inReader.ReadString('\n')
 		if err != nil {
-			// EOF or other error, stop trying to read
 			fmt.Printf("Input error: %v\n", err)
 			os.Exit(0)
 		}
@@ -72,14 +71,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("error: %s\n", err.Error())
 	}
-	name = strings.TrimSpace(name) // Trim the newline character
+	name = strings.TrimSpace(name)
 
 	conn, err := net.Dial("tcp", *serverAddr)
 	if err != nil {
 		log.Fatalf("error: %s\n", err.Error())
 	}
 
-	// Send the player's name to the server immediately after connecting
 	_, err = fmt.Fprintf(conn, "%s\n", name)
 	if err != nil {
 		log.Fatalf("error sending name to server: %s\n", err.Error())
