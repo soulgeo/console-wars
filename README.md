@@ -65,7 +65,7 @@ The client will prompt you for your player name and then connect to the server t
 
 The game starts with both players having 30 HP. If one player's HP goes to 0, the other player wins.
 
-Each turn, each player can take one of 5 different actions.
+Each turn, each player can take one of 5 different actions, by typing its name in lowercase on the console when prompted.
 
 ### Actions
 
