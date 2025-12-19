@@ -75,7 +75,7 @@ Each turn, each player can take one of 5 different actions, by typing its name i
 
 - 🛡️ **Defend:** Increase your armor, which decreases the chance that your opponent's attacks will go through.
 
-- 💪 **Charge:** Inceases your attack, which increases the damage your attacks will deal.
+- 💪 **Charge:** Increase your attack, which increases the damage your attacks will deal.
 
 - 💨 **Dodge:** If your opponent takes the Attack action this turn, they will have a significantly lower chance of hitting you.
 
