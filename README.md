@@ -5,7 +5,7 @@ Multiple games can run at the same time independent of each other.
 
 ## Installation
 
-To install and run the application locally, you need to have Go installed (version 1.25.5 or later).
+To install and run the server and/or the client locally, you need to have Go installed (version 1.25.5 or later).
 
 1.  **Clone the repository:**
 
