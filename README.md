@@ -35,7 +35,7 @@ To start the game server:
 ./bin/console-wars-server
 ```
 
-The server will listen for incoming client connections.
+The server will listen for incoming client connections on port `:4567`.
 
 ### Run the Client
 
