@@ -79,7 +79,7 @@ Each turn, each player can take one of 5 different actions.
 
 - 💨 **Dodge:** If your opponent takes the Attack action this turn, they will have a significantly lower chance of hitting you.
 
-- ✨ **Heal:** Heal for some random amount. You can only do this 3 times during the game.
+- ✨ **Heal:** Heal for up to 6 HP. You can only do this 3 times during the game.
 
 Once both players select their action, they will happen simultaneously.
 
