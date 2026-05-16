@@ -49,7 +49,7 @@ func Play(p1, p2 *Player, msg, act1, act2 chan string) {
 func waitForActions(
 	act1, act2 chan string,
 ) (string, string, error) {
-	timeout := time.After(30 * time.Second)
+	timeout := time.After(60 * time.Second)
 	var a1, a2 string
 	ch1, ch2 := act1, act2
 
